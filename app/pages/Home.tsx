@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect } from "react";
 
 const mySlides = [
@@ -30,27 +31,28 @@ const mySlides = [
 
 export default function OnePageScroll() {
     const [currentIndex, setCurrentIndex] = useState(0);
-
-    const handleScroll = (e) => {
-        if (e.deltaY > 0) {
-            if (currentIndex < mySlides.length - 1) {
-                setCurrentIndex(currentIndex + 1);
-            }
-        }
-        if (e.deltaY < 0) {
-            if (currentIndex > 0) {
-                setCurrentIndex(currentIndex - 1);
-            }
-        }
-    };
+    const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
-        window.addEventListener("wheel", handleScroll, { passive: true });
+        setHasMounted(true);
+    }, []);
 
+    useEffect(() => {
+        const handleScroll = (e) => {
+            if (e.deltaY > 0) {
+                setCurrentIndex((prev) => Math.min(prev + 1, mySlides.length - 1));
+            } else if (e.deltaY < 0) {
+                setCurrentIndex((prev) => Math.max(prev - 1, 0));
+            }
+        };
+
+        window.addEventListener("wheel", handleScroll, { passive: true });
         return () => {
             window.removeEventListener("wheel", handleScroll);
         };
-    }, [currentIndex]); 
+    }, []);
+
+    if (!hasMounted) return null; // 💡 Fix hydration mismatch
 
     const translateValue = -currentIndex * 100;
 
@@ -62,30 +64,28 @@ export default function OnePageScroll() {
                     transform: `translateY(${translateValue}vh)`
                 }}
             >
-                {mySlides.map((slide, slideIndex) => {
-                    return (
-                        <div
-                            key={slide.id}
-                            className="h-screen w-screen flex"
-                        >
-                            <div className="w-1/2 flex flex-col justify-center p-12 bg-white">
-                                <div className={`text-4xl ${slideIndex === currentIndex ? "animate-fade-in delay-500" : ""}`}>
-                                    {slide.topLeft}
-                                </div>
-                                <div className={`text-2xl mt-6 ${slideIndex === currentIndex ? "animate-slide-left delay-[1500ms]" : ""}`}>
-                                    {slide.bottomLeft}
-                                </div>
+                {mySlides.map((slide, slideIndex) => (
+                    <div
+                        key={slide.id}
+                        className="h-screen w-screen flex"
+                    >
+                        <div className="w-1/2 flex flex-col justify-center p-12 bg-white">
+                            <div className={`text-4xl ${slideIndex === currentIndex ? "animate-fade-in delay-500" : ""}`}>
+                                {slide.topLeft}
                             </div>
-
-                            <div
-                                className="w-1/2 h-full bg-cover bg-center relative z-10"
-                                style={{
-                                    backgroundImage: `url(${slide.image})`
-                                }}
-                            ></div>
+                            <div className={`text-2xl mt-6 ${slideIndex === currentIndex ? "animate-slide-left delay-[1500ms]" : ""}`}>
+                                {slide.bottomLeft}
+                            </div>
                         </div>
-                    );
-                })}
+
+                        <div
+                            className="w-1/2 h-full bg-cover bg-center relative z-10"
+                            style={{
+                                backgroundImage: `url(${slide.image})`
+                            }}
+                        ></div>
+                    </div>
+                ))}
             </div>
         </div>
     );
