@@ -52,7 +52,7 @@ export default function OnePageScroll() {
         };
     }, []);
 
-    if (!hasMounted) return null; // 💡 Fix hydration mismatch
+    if (!hasMounted) return null;
 
     const translateValue = -currentIndex * 100;
 
